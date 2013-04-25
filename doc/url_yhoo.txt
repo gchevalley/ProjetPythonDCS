@@ -1,0 +1,1 @@
+http://ichart.finance.yahoo.com/table.csv?s=SAP.DE&a=11&b=25&c=2012&d=03&e=25&f=2013&g=d&ignore=.csv
