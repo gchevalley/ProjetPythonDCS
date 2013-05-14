@@ -28,5 +28,8 @@ else:
             last_price = float(tag_last_price.string)
             print last_price
             break
+    
+    div_tag = soup.find('div', id='yfi_rt_quote_summary')
+    print div_tag
             
     

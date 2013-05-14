@@ -7,10 +7,16 @@ from Ticker import *
 import time
 
 
-
 default_entry_ticker = "ENTER Ticker"
 
+def entry_ticker_clear():
+    str_entry_ticker.set(default_entry_ticker)
+    entry_ticker.config(fg="grey")
+    root.focus_set()
+
 def entry_ticker_event_return(event):
+    global block_refresh
+    block_refresh = True
     tmp_ticker = Ticker(str_entry_ticker.get())
     
     if tmp_ticker.is_valid:
@@ -29,33 +35,38 @@ def entry_ticker_event_return(event):
         
     else:
         str_label_last_price_value.set("invalid symbol !")
-        
+    
+    entry_ticker_clear()
+    block_refresh = False     
 
 
 def entry_ticker_event_enter(event):
+    global block_refresh
+    block_refresh = True
     if str_entry_ticker.get() == default_entry_ticker:
         str_entry_ticker.set("")
         entry_ticker.config(fg="blue")
 
 def entry_ticker_event_leave(event):
     if str_entry_ticker.get() == "":
-        str_entry_ticker.set(default_entry_ticker)
-        entry_ticker.config(fg="grey")
+        entry_ticker_clear()
+        global block_refresh
+        block_refresh = False
     
 
 def update_clock():
-    now = time.strftime("%H:%M:%S")
-    print now
-    label_time.configure(text=now)
-    str_entry_ticker.set(default_entry_ticker)
-    
-    label_time.after(50000, update_clock)
+    if block_refresh == False:
+        now = time.strftime("%H:%M:%S")
+        print now
+        label_time.configure(text=now)
+        
+    label_time.after(5000, update_clock) #recall
     
 
 root = Tk()
 root.title("Stocks monitor")
 
-
+block_refresh = False
 now = time.strftime("%H:%M:%S")
 label_time = Label(text=now)
 label_time.pack()
@@ -93,5 +104,5 @@ b2 = Button(root, text="Setup new alert")
 b2.pack()
 
 
-root.after(50000, update_clock)
+root.after(5000, update_clock)
 root.mainloop()

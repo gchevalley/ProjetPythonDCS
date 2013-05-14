@@ -11,6 +11,7 @@ class Ticker():
     def __init__(self, symbol):
         self.symbol = symbol.upper()
         self.twitter_symbol = "$" + self.symbol
+        self.compagny_name = ""
         self.is_valid = False
         self.last_price = -1
         self.previous_close = -1
@@ -64,6 +65,8 @@ class Ticker():
                     self.last_price = float(tag_last_price.string)
                     self.logs.append([datetime.datetime.now(), "found last price on yahoo finance"])
                     break
+            
+            
                 
     def download_histo_data_from_yahoo(self, date_from = datetime.date(datetime.datetime.now().year-1, datetime.datetime.now().month, datetime.datetime.now().day), date_to = datetime.date(datetime.datetime.now().year, datetime.datetime.now().month, datetime.datetime.now().day)):
         #print date_from
