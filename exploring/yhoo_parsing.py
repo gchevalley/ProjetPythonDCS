@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-import re
+
 import requests
 import datetime
 
@@ -29,7 +29,9 @@ else:
             print last_price
             break
     
-    div_tag = soup.find('div', id='yfi_rt_quote_summary')
-    print div_tag
+    compagny_name = soup.find('div', id='yfi_rt_quote_summary').find('h2').string
+    print compagny_name
             
+    
+    
     
