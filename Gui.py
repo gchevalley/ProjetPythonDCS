@@ -91,12 +91,76 @@ def load_ticker_data(symbol):
             str_label_last_price_value.set("invalid symbol !")
 
 
-def btn_setup_new_alert_open_alert_window():
-    tl_alert = Toplevel()
-    tl_alert.title = "Set up new alert"
-    btn_alert_add = Button(tl_alert, text ="Add", command=tl_alert.destroy)
-    btn_alert_add.pack()
+def add_new_alert_from_window():
+    #check requirements
+    if str_label_alert_symbol.get() != '' and alert_action.get() != '' and str_entry_alert_limit.get() != '' and utility.is_number(str_entry_alert_limit.get()):
+        
+        tmp_ticker = Ticker(str_label_alert_symbol.get())
+        
+        if tmp_ticker.is_valid:
+            print("insert alert")
+            tmp_alert = Alert(tmp_ticker, alert_action.get(), float(str_entry_alert_limit.get()))
+            
+    else:
+        msgbox("Missing or incorrect required parameters !")
+        
 
+def btn_setup_new_alert_open_alert_window():
+    tmp_symbol = str_label_symbol.get().replace(header_symbol, "")
+    
+    if tmp_symbol == '':
+        tmp_symbol = str_entry_ticker.get().replace(default_entry_ticker, "")
+    
+    if tmp_symbol != '':
+        tmp_symbol = tmp_symbol.upper()
+        tl_alert = Toplevel()
+        base_alert_title = "Set up new alert for " + tmp_symbol
+        tl_alert.title(base_alert_title)
+        
+        
+        label_alert_if = Label(tl_alert, text="if :")
+        label_alert_if.grid(row=0, column=0)
+        
+        
+        str_label_alert_symbol.set(tmp_symbol)
+        label_alert_symbol = Label(tl_alert, textvariable=str_label_alert_symbol)
+        label_alert_symbol.grid(row=1, column=0)
+        
+        
+        alert_action.set("")
+        rb_alert_action_up = Radiobutton(tl_alert, text="Break UP", variable=alert_action, value="up")
+        rb_alert_action_up.grid(row=1, column=1, sticky="W")
+        rb_alert_action_down = Radiobutton(tl_alert, text="Break DOWN", variable=alert_action, value="down")
+        rb_alert_action_down.grid(row=2, column=1, sticky="W")
+        
+        label_alert_limit = Label(tl_alert, text="Limit")
+        label_alert_limit.grid(row=1, column=2)
+        
+        
+        str_entry_alert_limit.set("")
+        entry_alert_limit = Entry(tl_alert, textvariable=str_entry_alert_limit)
+        entry_alert_limit.grid(row=2, column=2)
+        
+        btn_alert_add = Button(tl_alert, text ="Add", command=add_new_alert_from_window)
+        btn_alert_add.grid(row=1, column=3)
+        btn_alert_close = Button(tl_alert, text="Close window", command=tl_alert.destroy)
+        btn_alert_close.grid(row=2, column=3)
+        
+        
+    else:
+        msgbox('no symbol')
+
+
+
+def msgbox(msg):
+    if msg != '':
+        tl_msgbox = Toplevel()
+        str_msgbox = StringVar()
+        str_msgbox.set(msg)
+        label_msgbox = Label(tl_msgbox, textvariable=str_msgbox)
+        label_msgbox.pack()
+        btn_msgbox_ok = Button(tl_msgbox, text="Ok", command=tl_msgbox.destroy)
+        btn_msgbox_ok.pack()
 
 
 root = Tk()
@@ -128,7 +192,7 @@ entry_ticker.bind('<Return>', entry_ticker_event_return)
 
 
 str_label_symbol = StringVar()
-str_label_symbol.set("symbol: #N/A")
+str_label_symbol.set("")
 label_symbol = Label(root, textvariable=str_label_symbol)
 label_symbol.grid(row=1, column=0, sticky="W")
 
@@ -190,6 +254,11 @@ tweets.grid(row=7, columnspan=4, sticky='W')
 
 alerts_msg = StringVar()
 alerts_msg.set("No alert")
+
+#warnings = check_all_alert()
+
+        
+
 alerts = Message(root, textvariable=alerts_msg)
 alerts.grid(row=8, columnspan=4, sticky='W')
 
@@ -203,6 +272,10 @@ b2.grid(row=2, column=4)
 b3 = Button(root, text="Show monitor")
 b3.grid(row=3, column=4)
 
+
+str_label_alert_symbol = StringVar()
+alert_action = StringVar()
+str_entry_alert_limit = StringVar()
 
 
 root.after(5000, update_clock)

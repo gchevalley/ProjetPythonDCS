@@ -34,8 +34,12 @@ def check_all_alert():
         ticker = Ticker.Ticker(alert[0])
         
         if ticker.is_valid and ticker.last_price > 0:
-            if ticker.last_price > alert[2]:
-                warning.append(alert)
+            if alert[1] == "up":
+                if ticker.last_price > alert[2]:
+                    warning.append(alert)
+            elif alert[2] == 'down':
+                if ticker.last_price < alert[2]:
+                    warning.append(alert)
     
     return warning
 
