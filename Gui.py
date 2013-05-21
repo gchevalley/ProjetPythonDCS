@@ -9,6 +9,8 @@ import time
 
 
 default_entry_ticker = "ENTER Ticker"
+refresh_time = 15000
+
 
 def entry_ticker_clear():
     str_entry_ticker.set(default_entry_ticker)
@@ -41,11 +43,9 @@ def entry_ticker_event_leave(event):
 
 def update_clock():
     if block_refresh == False:
-        now = time.strftime("%H:%M:%S")
-        print now
-        #label_time.configure(text=now)
+        manage_alerts()
         
-    label_time.after(5000, update_clock) #recall
+    label_time.after(refresh_time, update_clock) #recall
 
 
 def load_ticker_data(symbol):
@@ -101,9 +101,30 @@ def add_new_alert_from_window():
             print("insert alert")
             tmp_alert = Alert(tmp_ticker, alert_action.get(), float(str_entry_alert_limit.get()))
             
+            global block_refresh
+            block_refresh = False
+            
+            btn_close_new_alert_window()
     else:
         msgbox("Missing or incorrect required parameters !")
-        
+
+def btn_delete_selected_alerts():
+    global warnings
+    
+    for i in range(0, len(vec_data_alerts)):
+        if vec_data_alerts[i].get() == 1:
+            warnings[i].removeAlertFromDb()
+    
+    manage_alerts()
+    
+
+def btn_close_new_alert_window():
+    global block_refresh
+    block_refresh = False
+    
+    global tl_alert
+    tl_alert.destroy()
+    
 
 def btn_setup_new_alert_open_alert_window():
     tmp_symbol = str_label_symbol.get().replace(header_symbol, "")
@@ -112,7 +133,13 @@ def btn_setup_new_alert_open_alert_window():
         tmp_symbol = str_entry_ticker.get().replace(default_entry_ticker, "")
     
     if tmp_symbol != '':
+        
+        global block_refresh
+        block_refresh = True
+        
         tmp_symbol = tmp_symbol.upper()
+        
+        global tl_alert
         tl_alert = Toplevel()
         base_alert_title = "Set up new alert for " + tmp_symbol
         tl_alert.title(base_alert_title)
@@ -127,8 +154,9 @@ def btn_setup_new_alert_open_alert_window():
         label_alert_symbol.grid(row=1, column=0)
         
         
-        alert_action.set("")
+        alert_action.set("up")
         rb_alert_action_up = Radiobutton(tl_alert, text="Break UP", variable=alert_action, value="up")
+        rb_alert_action_up.select()
         rb_alert_action_up.grid(row=1, column=1, sticky="W")
         rb_alert_action_down = Radiobutton(tl_alert, text="Break DOWN", variable=alert_action, value="down")
         rb_alert_action_down.grid(row=2, column=1, sticky="W")
@@ -143,7 +171,7 @@ def btn_setup_new_alert_open_alert_window():
         
         btn_alert_add = Button(tl_alert, text ="Add", command=add_new_alert_from_window)
         btn_alert_add.grid(row=1, column=3)
-        btn_alert_close = Button(tl_alert, text="Close window", command=tl_alert.destroy)
+        btn_alert_close = Button(tl_alert, text="Close window", command=btn_close_new_alert_window)
         btn_alert_close.grid(row=2, column=3)
         
         
@@ -161,6 +189,46 @@ def msgbox(msg):
         label_msgbox.pack()
         btn_msgbox_ok = Button(tl_msgbox, text="Ok", command=tl_msgbox.destroy)
         btn_msgbox_ok.pack()
+
+
+def manage_alerts():
+    global warnings
+    warnings = check_all_alert()
+    
+    start_row_alerts = 8
+
+    #clean alerts area
+    global frame_alert
+    frame_alert.grid_forget()
+    frame_alert.destroy()
+    frame_alert = Frame(root)
+    frame_alert.grid(row=start_row_alerts, column=0)
+    
+    
+    if len(warnings) > 0:
+        
+        global vec_data_alerts
+        vec_data_alerts = []
+    
+        for i in range(0, len(warnings)): #receptionne un vec d objet
+        
+            tmp_alert_cb_value = IntVar() # variable de type int (objet)
+            tmp_alert_cb_value.set(0) # valeur initiale vaut 1
+            tmp_alert_cb = Checkbutton(frame_alert, text="", variable=tmp_alert_cb_value)
+            tmp_alert_cb.grid(row=start_row_alerts+i, column=0)
+            
+            vec_data_alerts.append(tmp_alert_cb_value)
+            
+            tmp_label_alert_ticker = Label(frame_alert, fg='red', text=warnings[i].symbol + ' break ' + warnings[i].cross + ' ' + str(warnings[i].level))
+            tmp_label_alert_ticker.grid(row=start_row_alerts+i, column=1, sticky='W')
+        
+        btn_delete_alert_selected = Button(frame_alert, text="Delete selected", command=btn_delete_selected_alerts)
+        btn_delete_alert_selected.grid(row=start_row_alerts, column=3, sticky="E")
+    
+    else:
+        
+        tmp_label = Label(frame_alert, text="No alert")
+        tmp_label.grid(row=start_row_alerts, column=0)
 
 
 root = Tk()
@@ -247,21 +315,22 @@ label_date_nxt_ern.grid(row=5, column=2, sticky="W")
 
 
 tweets_msg = StringVar()
-tweets_msg.set("empty")
+tweets_msg.set("tweet empty")
 tweets = Message(root, textvariable=tweets_msg)
 tweets.grid(row=7, columnspan=4, sticky='W')
 
 
-alerts_msg = StringVar()
-alerts_msg.set("No alert")
 
-#warnings = check_all_alert()
+frame_alert = Frame(root)
+frame_alert.grid(row=8, column=0)
 
-        
+label_no_alert = Label(frame_alert, text="no alert")
+label_no_alert.grid(row=8, column=0)
 
-alerts = Message(root, textvariable=alerts_msg)
-alerts.grid(row=8, columnspan=4, sticky='W')
-
+tl_alert = Toplevel()
+warnings = []
+vec_data_alerts = []
+manage_alerts()
 
 b1 = Button(root, text="Add to monitor")
 b1.grid(row=1, column=4)
@@ -278,5 +347,5 @@ alert_action = StringVar()
 str_entry_alert_limit = StringVar()
 
 
-root.after(5000, update_clock)
+root.after(refresh_time, update_clock)
 root.mainloop()

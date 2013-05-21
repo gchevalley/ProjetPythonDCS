@@ -13,10 +13,6 @@ class Db():
         with con:
             cur = con.cursor()
             
-            #cur.execute("DROP TABLE IF EXISTS Parameter")
-            #cur.execute("DROP TABLE IF EXISTS Monitor")
-            #cur.execute("DROP TABLE IF EXISTS Alert")
-            
             cur.execute("CREATE TABLE IF NOT EXISTS Parameter(key TEXT PRIMARY KEY ASC, value TEXT)")
             cur.execute("CREATE TABLE IF NOT EXISTS Monitor(symbol TEXT PRIMARY KEY ASC)")
             cur.execute("CREATE TABLE IF NOT EXISTS Alert(symbol TEXT, cross TEXT, level NUMERIC, price_last_refresh NUMERIC, PRIMARY KEY (symbol, cross, level))")

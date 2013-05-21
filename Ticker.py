@@ -3,6 +3,7 @@ import re #regex
 import requests
 import datetime
 import json
+import sys
 
 import utility
 
@@ -116,8 +117,8 @@ class Ticker():
             from pygooglechart import SimpleLineChart
             from pygooglechart import Axis
             
-            price_max = -1
-            price_min = 1000000000
+            price_max = -sys.maxint
+            price_min = sys.maxint
             
             vec_price = []
             vec_date = []
