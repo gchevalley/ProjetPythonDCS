@@ -54,3 +54,17 @@ def check_all_alert():
                     warning.append(tmp_alert)
     
     return warning
+
+
+def get_all_alerts():
+    vec_all_alerts = []
+    
+    all_alerts = db.get_table_content("Alert")
+    for alert in all_alerts:
+        ticker = Ticker.Ticker(alert[0], True)
+        
+        if ticker.is_valid and ticker.last_price > 0:
+            tmp_alert = Alert(ticker, alert[1], alert[2], True)
+            vec_all_alerts.append(tmp_alert)
+    
+    return vec_all_alerts

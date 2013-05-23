@@ -28,4 +28,7 @@ class Idea():
     def insertIdeaInDb(self):
         """insere l alert dans la DB"""
         db.insert_query('Monitor', ((self.symbol,),))
-        
+    
+    def deleteIdeaInDb(self):
+        sql_query = "DELETE FROM Monitor WHERE symbol='" + self.symbol + "'"
+        db.exec_query(sql_query)        
