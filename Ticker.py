@@ -51,7 +51,7 @@ class Ticker():
     
     
     def download_last_datas_from_yahoo(self):
-        
+        """recupere les donnees live"""
         r = requests.get("http://finance.yahoo.com/q", params={'s' : self.symbol})
         soup = BeautifulSoup(r.text)
         
@@ -83,6 +83,7 @@ class Ticker():
             
                 
     def download_histo_data_from_yahoo(self, date_from = datetime.date(datetime.datetime.now().year-1, datetime.datetime.now().month, datetime.datetime.now().day), date_to = datetime.date(datetime.datetime.now().year, datetime.datetime.now().month, datetime.datetime.now().day)):
+        """recupere les donnees historiques"""
         #print date_from
         #print date_to
         
@@ -96,7 +97,7 @@ class Ticker():
             
             if (len(csv_data)>0): #check data are available
                 for line in csv_data:
-                    if (len(line)>0): #sometime, last line is empty
+                    if (len(line)>0): #sometimes, last line is empty
                         data_histo.append(line.split(','))
                 
                 data_histo = [data_histo[0]] + data_histo[:1:-1] #headers + reverse timeserie
@@ -112,6 +113,7 @@ class Ticker():
                 self.logs.append([datetime.datetime.now(), "found histo datas on yahoo finance " + str(len(csv_data)-1) + " entries"])
     
     def generate_chart(self):
+        """creation du linechart sous forme d image png grace aux donnees historiques"""
         if self.is_valid and len(self.histo_data) > 10:
             from pygooglechart import Chart
             from pygooglechart import SimpleLineChart
@@ -177,6 +179,7 @@ class Ticker():
             self.path_chart_1yr = 'img_chart/' + self.symbol + '.png'
     
     def download_related_tweet(self):
+        """recupere les derniers tweets ou l on trouve le ticker de la societe"""
         if self.is_valid:
             r = requests.get("http://search.twitter.com/search.json", params={'q' : self.twitter_symbol})
             

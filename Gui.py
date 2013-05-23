@@ -4,51 +4,50 @@ import utility
 from Alert import *
 import Monitor
 from Ticker import *
+import thread
 
 import time
 
 
 default_entry_ticker = "ENTER Ticker"
-refresh_time = 15000
+refresh_time = 15 #en seconde pour les threads
 
 
 def entry_ticker_clear():
+    """vide l entry widget, met un texte par defaut en couleur gris"""
     str_entry_ticker.set(default_entry_ticker)
     entry_ticker.config(fg="grey")
     root.focus_set()
 
+
 def entry_ticker_event_return(event):
-    global block_refresh
-    block_refresh = True
-    
+    """event declenche lorsque la touche ENTER du clavier et frappee dans l entry widget"""
     load_ticker_data(str_entry_ticker.get())
-    
-    entry_ticker_clear()
-    block_refresh = False     
+    entry_ticker_clear()  
 
 
 def entry_ticker_event_enter(event):
-    global block_refresh
-    block_refresh = True
+    """event declencher lorsque la souris passe au dessus ou rentre dans le widget entry"""
     if str_entry_ticker.get() == default_entry_ticker:
         str_entry_ticker.set("")
         entry_ticker.config(fg="blue")
 
+
 def entry_ticker_event_leave(event):
     if str_entry_ticker.get() == "":
         entry_ticker_clear()
-        global block_refresh
-        block_refresh = False
     
 
 def update_clock():
-    if block_refresh == False:
+    """fonction qui check regulierement quelles alertes sont actives"""
+    
+    while True:
+        time.sleep(refresh_time)
         manage_alerts()
-        
-    label_time.after(refresh_time, update_clock) #recall
-
+    
 
 def load_ticker_data(symbol):
+    """fonction qui va presenter les donnees financieres du produit financier desire"""
     if symbol != '':
         tmp_ticker = Ticker(symbol)
         
@@ -91,42 +90,36 @@ def load_ticker_data(symbol):
             str_label_last_price_value.set("invalid symbol !")
 
 
-def add_new_alert_from_window():
+def add_new_alert_from_window(widget_tl_to_close_if_successfull = None):
+    """ajout d une alert dans la DB a partir de la pop-up fenetre"""
     #check requirements
     if str_label_alert_symbol.get() != '' and alert_action.get() != '' and str_entry_alert_limit.get() != '' and utility.is_number(str_entry_alert_limit.get()):
         
-        tmp_ticker = Ticker(str_label_alert_symbol.get())
+        tmp_ticker = Ticker(str_label_alert_symbol.get(), True)
         
         if tmp_ticker.is_valid:
-            print("insert alert")
             tmp_alert = Alert(tmp_ticker, alert_action.get(), float(str_entry_alert_limit.get()))
             
-            global block_refresh
-            block_refresh = False
-            
-            btn_close_new_alert_window()
+            widget_tl_to_close_if_successfull.destroy()
+            thread.start_new_thread(manage_alerts, ())
     else:
         msgbox("Missing or incorrect required parameters !")
 
+
 def btn_delete_selected_alerts():
+    """suppression dans la DB des alerts selectionnees"""
     global warnings
     
     for i in range(0, len(vec_data_alerts)):
         if vec_data_alerts[i].get() == 1:
             warnings[i].removeAlertFromDb()
     
-    manage_alerts()
-    
-
-def btn_close_new_alert_window():
-    global block_refresh
-    block_refresh = False
-    
-    global tl_alert
-    tl_alert.destroy()
+    #manage_alerts()
+    thread.start_new_thread(manage_alerts, ())
     
 
 def btn_setup_new_alert_open_alert_window():
+    """fonction qui genere la pop window qui permet de creer de nouvelle alert"""
     tmp_symbol = str_label_symbol.get().replace(header_symbol, "")
     
     if tmp_symbol == '':
@@ -134,31 +127,24 @@ def btn_setup_new_alert_open_alert_window():
     
     if tmp_symbol != '':
         
-        global block_refresh
-        block_refresh = True
-        
         tmp_symbol = tmp_symbol.upper()
         
-        global tl_alert
         tl_alert = Toplevel()
         base_alert_title = "Set up new alert for " + tmp_symbol
         tl_alert.title(base_alert_title)
         
-        
         label_alert_if = Label(tl_alert, text="if :")
         label_alert_if.grid(row=0, column=0)
-        
         
         str_label_alert_symbol.set(tmp_symbol)
         label_alert_symbol = Label(tl_alert, textvariable=str_label_alert_symbol)
         label_alert_symbol.grid(row=1, column=0)
         
-        
         alert_action.set("up")
-        rb_alert_action_up = Radiobutton(tl_alert, text="Break UP", variable=alert_action, value="up")
+        rb_alert_action_up = Radiobutton(tl_alert, text="Breaks UP", variable=alert_action, value="up")
         rb_alert_action_up.select()
         rb_alert_action_up.grid(row=1, column=1, sticky="W")
-        rb_alert_action_down = Radiobutton(tl_alert, text="Break DOWN", variable=alert_action, value="down")
+        rb_alert_action_down = Radiobutton(tl_alert, text="Breaks DOWN", variable=alert_action, value="down")
         rb_alert_action_down.grid(row=2, column=1, sticky="W")
         
         label_alert_limit = Label(tl_alert, text="Limit")
@@ -169,18 +155,17 @@ def btn_setup_new_alert_open_alert_window():
         entry_alert_limit = Entry(tl_alert, textvariable=str_entry_alert_limit)
         entry_alert_limit.grid(row=2, column=2)
         
-        btn_alert_add = Button(tl_alert, text ="Add", command=add_new_alert_from_window)
+        btn_alert_add = Button(tl_alert, text ="Add", command=lambda: add_new_alert_from_window(tl_alert))
         btn_alert_add.grid(row=1, column=3)
-        btn_alert_close = Button(tl_alert, text="Close window", command=btn_close_new_alert_window)
+        btn_alert_close = Button(tl_alert, text="Close window", command=tl_alert.destroy)
         btn_alert_close.grid(row=2, column=3)
-        
         
     else:
         msgbox('no symbol')
 
 
-
 def msgbox(msg):
+    """fonction pour retourner des messages a l utilisateur sous forme de popup"""
     if msg != '':
         tl_msgbox = Toplevel()
         str_msgbox = StringVar()
@@ -192,6 +177,7 @@ def msgbox(msg):
 
 
 def manage_alerts():
+    """fonction qui affiche les alerts actives"""
     global warnings
     warnings = check_all_alert()
     
@@ -199,13 +185,20 @@ def manage_alerts():
 
     #clean alerts area
     global frame_alert
-    frame_alert.grid_forget()
+    #frame_alert.grid_forget()
     frame_alert.destroy()
     frame_alert = Frame(root)
     frame_alert.grid(row=start_row_alerts, column=0)
     
     
     if len(warnings) > 0:
+        
+        #insere les nouvelles
+        
+        
+        #delete les mortes
+        
+        
         
         global vec_data_alerts
         vec_data_alerts = []
@@ -219,7 +212,7 @@ def manage_alerts():
             
             vec_data_alerts.append(tmp_alert_cb_value)
             
-            tmp_label_alert_ticker = Label(frame_alert, fg='red', text=warnings[i].symbol + ' break ' + warnings[i].cross + ' ' + str(warnings[i].level))
+            tmp_label_alert_ticker = Label(frame_alert, fg='red', text=warnings[i].symbol + ' breaks ' + warnings[i].cross + ' ' + str(warnings[i].level))
             tmp_label_alert_ticker.grid(row=start_row_alerts+i, column=1, sticky='W')
         
         btn_delete_alert_selected = Button(frame_alert, text="Delete selected", command=btn_delete_selected_alerts)
@@ -230,6 +223,10 @@ def manage_alerts():
         tmp_label = Label(frame_alert, text="No alert")
         tmp_label.grid(row=start_row_alerts, column=0)
 
+
+
+
+################################### GUI #####################################
 
 root = Tk()
 root.title("Stocks monitor")
@@ -279,7 +276,7 @@ label_last_price.grid(row=3, column=0, sticky="W")
 str_label_return_1d_value = StringVar()
 str_label_return_1d_value.set("Intraday return: #N/A")
 label_return_1d = Label(root, textvariable=str_label_return_1d_value)
-label_return_1d.grid(row=3, column=1, sticky="E")
+label_return_1d.grid(row=3, column=1, sticky="W")
 
 
 
@@ -327,10 +324,9 @@ frame_alert.grid(row=8, column=0)
 label_no_alert = Label(frame_alert, text="no alert")
 label_no_alert.grid(row=8, column=0)
 
-tl_alert = Toplevel()
 warnings = []
 vec_data_alerts = []
-manage_alerts()
+#manage_alerts()
 
 b1 = Button(root, text="Add to monitor")
 b1.grid(row=1, column=4)
@@ -346,6 +342,6 @@ str_label_alert_symbol = StringVar()
 alert_action = StringVar()
 str_entry_alert_limit = StringVar()
 
+thread.start_new_thread(update_clock, ())
 
-root.after(refresh_time, update_clock)
 root.mainloop()

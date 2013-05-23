@@ -16,21 +16,24 @@ class Alert():
             sql_query = "SELECT * FROM Alert WHERE symbol='" + ticker.symbol + "' AND cross='" + cross + "' AND level=" + str(level)
             extract_already_existing = db.select_query(sql_query)
             if len(extract_already_existing)>0:
+                #profite de mettre a jour le dernier prix
                 sql_query = "UPDATE ALERT SET price_last_refresh=" + str(ticker.last_price) + " WHERE symbol='" + ticker.symbol + "' AND cross='" + cross + "' AND level=" + str(level)
                 db.exec_query(sql_query)
             else:
                 self.insertAlertInDb(self.symbol, self.cross, self.level, ticker.last_price)
     
     def insertAlertInDb(self, symbol, cross, level, last_price = -1):
+        """insere l alert dans la DB"""
         db.insert_query('Alert', ((symbol, cross, level, last_price ),))
     
     def removeAlertFromDb(self):
+        """supprimer une alert de la DB"""
         sql_query = "DELETE FROM Alert WHERE symbol='" + self.symbol + "' AND cross='" + self.cross + "' AND level=" + str(self.level)
         db.exec_query(sql_query)
 
 
 def check_all_alert():
-    
+    """retourne un vecteur d objet Alert qui contient celle qui ont declenchees leur trigger"""
     warning = []
     
     all_alerts = db.get_table_content("Alert")
