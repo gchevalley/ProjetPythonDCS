@@ -16,6 +16,7 @@ class Ticker():
         self.is_valid = False
         self.last_price = -1
         self.previous_close = -1
+        self.daily_return = 0
         self.today_open = -1
         self.today_high = -1
         self.today_low = -1
@@ -29,6 +30,7 @@ class Ticker():
         self.pe = -1
         self.eps = -1
         self.div_yield = -1
+        self.market_cap = -1
         
         self.histo_data = []
         self.path_chart_1yr = ""
@@ -73,23 +75,46 @@ class Ticker():
             for tag_prev_close in soup.find_all('th', text=re.compile("Prev Close:")):
                 if utility.is_number(tag_prev_close.next_sibling.string):
                     self.previous_close = float(tag_prev_close.next_sibling.string)
+                    self.daily_return = round(100*((self.last_price/self.previous_close)-1),2)
+                    
                     break
             
             self.company_name = soup.find('div', id='yfi_rt_quote_summary').find('h2').string
             
-            #for tag_market_cap = soup.find('span', id='yfs_j10_' + self.symbol.lower()):
-                
+            for tag_beta in soup.find_all('th', text=re.compile("Beta:")):
+                if utility.is_number(tag_beta.next_sibling.string):
+                    self.beta = float(tag_beta.next_sibling.string)
+                    break
             
+            for tag_ern in soup.find_all('th', text=re.compile('Next Earnings Date:')):
+                if tag_ern.next_sibling.text != '':
+                    self.next_earnings_date = tag_ern.next_sibling.text
+                    break
+            
+            for tag_market_cap in soup.find('span', id='yfs_j10_' + self.symbol.lower()):
+                if utility.is_number(tag_market_cap.string[:-1]):
+                    self.market_cap = tag_market_cap.string
+                    break
+            
+            
+            for ttm_span in soup.find_all('span', text=re.compile('ttm')):
+                
+                if ttm_span.parent.text[:3] == 'P/E':
+                    if utility.is_number(ttm_span.parent.next_sibling.text):
+                        self.pe = float(ttm_span.parent.next_sibling.text)
+                elif ttm_span.parent.text[:3] == 'EPS':
+                    if utility.is_number(ttm_span.parent.next_sibling.text):
+                        self.eps = float(ttm_span.parent.next_sibling.text)
+                
+                
             
                 
     def download_histo_data_from_yahoo(self, date_from = datetime.date(datetime.datetime.now().year-1, datetime.datetime.now().month, datetime.datetime.now().day), date_to = datetime.date(datetime.datetime.now().year, datetime.datetime.now().month, datetime.datetime.now().day)):
         """recupere les donnees historiques"""
-        #print date_from
-        #print date_to
+
         
         if self.is_valid:
             r = requests.get("http://ichart.finance.yahoo.com/table.csv", params={'s' : self.symbol, 'a' : str(date_from.month-1), 'b' : str(date_from.day), 'c': str(date_from.year), 'd' : str(date_to.month-1), 'e' : str(date_to.day), 'f' : str(date_to.year), 'g' : 'd', 'ignore' : '.csv'})
-            #print r.url
             
             csv_data = r.content
             csv_data = csv_data.split('\n')
@@ -112,9 +137,11 @@ class Ticker():
                 
                 self.logs.append([datetime.datetime.now(), "found histo datas on yahoo finance " + str(len(csv_data)-1) + " entries"])
     
+    
     def generate_chart(self):
         """creation du linechart sous forme d image png grace aux donnees historiques"""
         if self.is_valid and len(self.histo_data) > 10:
+            
             from pygooglechart import Chart
             from pygooglechart import SimpleLineChart
             from pygooglechart import Axis
@@ -128,7 +155,6 @@ class Ticker():
             for i in range(1, len(self.histo_data)):
                 
                 if (i < len(self.histo_data)-1) and float(self.histo_data[i][0][5:7]) != float(self.histo_data[i+1][0][5:7]): #end of month ?
-                    #vec_date.append(self.histo_data[i][0][-2:] + "-" + self.histo_data[i][0][5:7])
                     vec_date.append(self.histo_data[i][0][5:7])
                 else:
                     vec_date.append('')
@@ -143,7 +169,6 @@ class Ticker():
                     
                     if self.histo_data[i][6] > price_max:
                         price_max = self.histo_data[i][6]
-            
             
             
             y_scale_up = int(price_max)
@@ -175,11 +200,14 @@ class Ticker():
             chart.set_axis_labels(Axis.BOTTOM, vec_date)
             
             
-            chart.download('img_chart/' + self.symbol + '.png')
-            self.path_chart_1yr = 'img_chart/' + self.symbol + '.png'
+            utility.create_missing_folder(utility.FOLDER_CHART)
+            
+            chart.download(utility.FOLDER_CHART + '/' + self.symbol + '.png')
+            self.path_chart_1yr = utility.FOLDER_CHART + '/' + self.symbol + '.png'
+    
     
     def download_related_tweet(self):
-        """recupere les derniers tweets ou l on trouve le ticker de la societe"""
+        """recupere les derniers tweets ou l on trouve le $ticker de la societe"""
         if self.is_valid:
             r = requests.get("http://search.twitter.com/search.json", params={'q' : self.twitter_symbol})
             

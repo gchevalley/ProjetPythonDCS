@@ -1,7 +1,0 @@
-document.write('<!--Vendor: SiteScout, Format: IFrame, IO: -->\n<iframe src=\"http://guru.sitescout.com/disp?pid=480AF4C&rnd=1366963833&cm=http%3A%2F%2Fad%2Eyieldmanager%2Ecom%2Fclk%3F3%2CeJylU9mSmkAU%2ERrfJlYvLFJWHppNRRYRUNuXFJsiIDjqROXrcxkzSVmVt3RB3%2D5zDvdeDg2m41yWsZjJ2Q7jPB3tlDGmuSBKQqqI6A2Nx2MsiYSMqCKjN8YqxubCdMHUdtoxlfVjsSqCPXuOPeOMzZ7rxaifJ5qgfTD%2ECWVi9qX8z6Fx66tOHyHrXh%2DxblRUy1BQ%2E8gmDnLLiHp6Udprs3b1%2EdUJzdo5IHEbzrAdpp1DHMQJR85xVbl%2EC3x%2EK67X04CyATHhSutDWl2GSR6fhkk6fMRF2w7T9gjUI4WJN1xxAuFml%2DzIG0eZ6wbOwlXDiVLwoGjitV%2DtiLiLm9ktQ2KZGPdzFJ2qbb3iCa19Pyp%2DptTVt9Xtviy3XrIyVT%2Dy6ii4d5nm352OEy%2EknacbD0f3H27nYHvqnizdR25o3OC%2DpJRVoKFOB3u9unA6q5yOCW4YdRCxE9yJpc8%2DHO1e9P1EnU9Scun78XnIrvbERcBD3vqQa77olrWeYLXydOt9e8wMb7My3UAgS%2DJSe2JBbQN7et8Tx5%2E1D%2E7NnloV4CReX6%2E8iO%2EbR3UCe9Cni%2DzF0n3dJnE9jM%2EZi53BbDKgOhaP5Oe5KDEgDuyVzzH8VwCFDordoYmbNO8z9HpJphgJClSzl4ZG%2Dk8EMGdTz4O1sVn0RagkKTJGuKdtANbNj%2EKMbm5a25VvZbto0z4WbNpeLtrOxqbkHuEgq7kPchXkgSBdKpAvYvQNIOsrpURHmGCMEBUAngP8XkrnuTE1z2JS49NWjQ9akO%2DBZEBK8IMpWBEVSqk0kmWIwCyB6W3b9IqnfQMivJ7K3%2D%2E84t%2E7gJoXeGbftlBAeq%2E7rn4BMgMitQ%3D%3D%2C\" width=\'300\' height=\'250\' marginwidth=\'0\' marginheight=\'0\' scrollbars=\'0\' scrolling=\'no\' frameborder=\'0\' bordercolor=\'#000000\' vspace=\'0\' hspace=\'0\'></iframe>');
-var rm_data = new Object();
-rm_data.creative_id = 19930984;
-rm_data.offer_type = 75;
-rm_data.entity_id = 597066;
-
-if (window.rm_crex_data) {rm_crex_data.push(19930984);}

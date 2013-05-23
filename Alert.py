@@ -30,6 +30,9 @@ class Alert():
         """supprimer une alert de la DB"""
         sql_query = "DELETE FROM Alert WHERE symbol='" + self.symbol + "' AND cross='" + self.cross + "' AND level=" + str(self.level)
         db.exec_query(sql_query)
+    
+    def __str__(self):
+        return self.symbol + ' breaks ' + self.cross + ' ' + str(self.level)
 
 
 def check_all_alert():
@@ -38,7 +41,7 @@ def check_all_alert():
     
     all_alerts = db.get_table_content("Alert")
     for alert in all_alerts:
-        ticker = Ticker.Ticker(alert[0])
+        ticker = Ticker.Ticker(alert[0], True)
         
         if ticker.is_valid and ticker.last_price > 0:
             if alert[1] == "up":
