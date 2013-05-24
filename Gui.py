@@ -110,7 +110,6 @@ class UpdatePriceMonitor(threading.Thread):
         i = 0
         while not self.Terminated:
             time.sleep(refresh_time)
-            
             for item in self.data_to_update:
                 tmp_ticker = Ticker(item[1].symbol ,True)
                 

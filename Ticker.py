@@ -26,11 +26,11 @@ class Ticker():
         self.actual_ask = -1
         self.yahoo_1yr_target_price = -1
         self.beta = -1
-        self.next_earnings_date = ''
-        self.pe = -1
-        self.eps = -1
+        self.next_earnings_date = '#N/A'
+        self.pe = "#N/A"
+        self.eps = "#N/A"
         self.div_yield = -1
-        self.market_cap = -1
+        self.market_cap = "#N/A"
         
         self.histo_data = []
         self.path_chart_1yr = ""
@@ -91,7 +91,7 @@ class Ticker():
                     self.next_earnings_date = tag_ern.next_sibling.text
                     break
             
-            for tag_market_cap in soup.find('span', id='yfs_j10_' + self.symbol.lower()):
+            for tag_market_cap in soup.find_all('span', id='yfs_j10_' + self.symbol.lower()):
                 if utility.is_number(tag_market_cap.string[:-1]):
                     self.market_cap = tag_market_cap.string
                     break
