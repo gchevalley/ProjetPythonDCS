@@ -32,3 +32,15 @@ def is_number(s):
 def create_missing_folder(d): #http://stackoverflow.com/questions/273192/python-best-way-to-create-directory-if-it-doesnt-exist-for-file-write
     if not os.path.exists(d):
         os.makedirs(d)
+    
+def average(vec):
+    sum = 0.0
+    k = 0
+    for item in vec:
+        sum += item
+        k += 1
+    
+    if k > 0:
+        return sum/k
+    else:
+        return 0.0

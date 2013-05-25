@@ -82,7 +82,7 @@ def load_ticker_data(symbol):
             msg = ''
             i = 0
             for tweet in tmp_ticker.relate_tweet:
-                msg += tweet + "\n"
+                msg += tweet + "\n" + "\n" 
                 i += 1
                 
                 if i == 5:
@@ -144,8 +144,16 @@ def btn_show_monitor():
     mon = Monitor()
     if len(mon.ideas) > 0:
         tl_monitor = Toplevel()
+        tl_monitor.title('Monitor')
         th = thread.start_new_thread(manage_monitor, (mon, tl_monitor))
-        #manage_monitor(mon, tl_monitor)
+
+
+
+def manage_monitor_event_click_price(event):
+    global vec_data_ideas
+    for item in vec_data_ideas:
+        if item[3] == event.widget:
+            btn_setup_new_alert_open_alert_window(item[1].symbol)
         
         
 def manage_monitor(mon, tl_monitor):
@@ -165,18 +173,20 @@ def manage_monitor(mon, tl_monitor):
     
     grid_row=1
     for idea in mon.ideas:
+        
         tmp_ticker = Ticker(idea.symbol, True)
         if tmp_ticker.is_valid:
             
             tmp_idea_cb_value = IntVar() # variable de type int (objet)
             tmp_idea_cb_value.set(0) # valeur initiale vaut 1
             tmp_idea_cb = Checkbutton(frame_monitor, text=tmp_ticker.symbol, variable=tmp_idea_cb_value)
-            tmp_idea_cb.grid(row=grid_row, column=0)
+            tmp_idea_cb.grid(row=grid_row, column=0, sticky="W")
             
             str_label_last_price_value = StringVar()
             str_label_last_price_value.set(str(tmp_ticker.last_price))
             tmp_label_last_price = Label(frame_monitor, textvariable=str_label_last_price_value)
             tmp_label_last_price.grid(row=grid_row, column=1)
+            tmp_label_last_price.bind('<Button-1>', manage_monitor_event_click_price)
             
             str_label_intraday_return_value = StringVar()
             str_label_intraday_return_value.set(str(tmp_ticker.daily_return))
@@ -210,13 +220,14 @@ def add_new_alert_from_window(widget_tl_to_close_if_successfull = None):
     """ajout d une alert dans la DB a partir de la pop-up fenetre"""
     #check requirements
     if str_label_alert_symbol.get() != '' and alert_action.get() != '' and str_entry_alert_limit.get() != '' and utility.is_number(str_entry_alert_limit.get()):
-        
+            
         tmp_ticker = Ticker(str_label_alert_symbol.get(), True)
         
         if tmp_ticker.is_valid:
             tmp_alert = Alert(tmp_ticker, alert_action.get(), float(str_entry_alert_limit.get()))
             
-            widget_tl_to_close_if_successfull.destroy()
+            if widget_tl_to_close_if_successfull != None:
+                widget_tl_to_close_if_successfull.destroy()
 
     else:
         msgbox("Missing or incorrect required parameters !")
@@ -237,12 +248,16 @@ def btn_delete_selected_alerts():
                     item.destroy()
     
 
-def btn_setup_new_alert_open_alert_window():
+def btn_setup_new_alert_open_alert_window(symbol = ''):
     """fonction qui genere la pop window qui permet de creer de nouvelle alert"""
-    tmp_symbol = str_label_symbol.get().replace(header_symbol, "")
     
-    if tmp_symbol == '':
-        tmp_symbol = str_entry_ticker.get().replace(default_entry_ticker, "")
+    if symbol != '':
+        tmp_symbol = symbol
+    else:
+        tmp_symbol = str_label_symbol.get().replace(header_symbol, "")
+    
+        if tmp_symbol == '':
+            tmp_symbol = str_entry_ticker.get().replace(default_entry_ticker, "")
     
     if tmp_symbol != '':
         
@@ -308,9 +323,10 @@ def manage_alerts():
     if len(warnings) > 0:
         
         global vec_data_alerts
-        vec_data_alerts = []
+        #vec_data_alerts = []
         
         #ajouter uniquement les manquants
+        count_new_alert = 0
         for i in range(0, len(warnings)): #receptionne un vec d objet
             
             need_to_insert_alert = True
@@ -320,7 +336,7 @@ def manage_alerts():
                     break
 
             if need_to_insert_alert:
-                
+                count_new_alert += 1
                 tmp_alert_cb_value = IntVar() # variable de type int (objet)
                 tmp_alert_cb_value.set(0) # valeur initiale vaut 1
                 tmp_alert_cb = Checkbutton(frame_alert, text=str(warnings[i]), variable=tmp_alert_cb_value, fg='red')
@@ -330,19 +346,29 @@ def manage_alerts():
         
         btn_delete_alert_selected = Button(frame_alert, text="Delete selected", command=btn_delete_selected_alerts)
         btn_delete_alert_selected.grid(row=start_row_alerts, column=3, sticky="E")
-    
-    else:
         
-        tmp_label = Label(frame_alert, text="No alert")
-        tmp_label.grid(row=start_row_alerts, column=0)
+        if count_new_alert > 0:
+            msgbox("Warning: New alert" + ('s' if count_new_alert > 1 else '' ) + '!')
+        
+    #else:
+        
+        #tmp_label = Label(frame_alert, text="No alert")
+        #tmp_label.grid(row=start_row_alerts, column=0)
 
 
 
 def btn_delete_selected_all_alerts():
     global vec_data_all_alerts
+    global frame_alert
     
     for entry in vec_data_all_alerts:
         if entry[0].get() == 1:
+            
+            #egalement detruire dans la frame principale
+            for item in frame_alert.winfo_children():
+                if item['text'] == str(entry[1]):
+                    item.destroy()
+            
             entry[1].removeAlertFromDb()
             entry[2].destroy()
     
@@ -357,12 +383,13 @@ def btn_show_all_alerts():
     if len(vec_all_alerts) > 0:
         
         tl_all_alerts = Toplevel()
+        tl_all_alerts.title('All alerts')
         frame_all_alerts = Frame(tl_all_alerts)
         frame_all_alerts.grid(row=0, column=0)
         
         for alert in vec_all_alerts:
-            tmp_alert_cb_value = IntVar() # variable de type int (objet)
-            tmp_alert_cb_value.set(0) # valeur initiale vaut 1
+            tmp_alert_cb_value = IntVar()
+            tmp_alert_cb_value.set(0)
             tmp_alert_cb = Checkbutton(frame_all_alerts, text=str(alert), variable=tmp_alert_cb_value)
             tmp_alert_cb.grid(row=k, column=0, sticky='W')
             
@@ -472,7 +499,7 @@ frame_alert.grid(row=8, column=0)
 warnings = []
 vec_data_alerts = []
 vec_data_all_alerts = []
-#manage_alerts()
+manage_alerts()
 
 vec_data_ideas = []
 
@@ -485,7 +512,8 @@ btn_new_idea_for_monitor = Button(root, text="Add to monitor", command=btn_setup
 btn_new_idea_for_monitor.grid(row=2, column=4)
 
 
-btn_show_alerts = Button(root, text="Show all alerts", command=btn_show_all_alerts)
+#btn_show_alerts = Button(root, text="Show all alerts", command=btn_show_all_alerts)
+btn_show_alerts = Button(root, text="Show all alerts", command=lambda: thread.start_new_thread(btn_show_all_alerts, ()))
 btn_show_alerts.grid(row=3, column=4)
 
 btn_new_alert = Button(root, text="Setup new alert", command=btn_setup_new_alert_open_alert_window)

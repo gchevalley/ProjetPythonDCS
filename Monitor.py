@@ -24,6 +24,11 @@ class Idea():
             
             if len(extract_already_existing)==0:
                 self.insertIdeaInDb()
+                
+                
+    def __eq__(self, other):
+        return self.symbol == other.symbol
+    
     
     def insertIdeaInDb(self):
         """insere l alert dans la DB"""
