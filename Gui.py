@@ -102,10 +102,13 @@ def load_ticker_data(symbol):
 
 
 class UpdatePriceMonitor(threading.Thread):
+    """classe pour la mise a jour des prix du monitor"""
+    
     def __init__(self, data_to_update):
         threading.Thread.__init__(self)
         self.Terminated = False
         self.data_to_update = data_to_update
+        
     def run(self):
         i = 0
         while not self.Terminated:
@@ -114,14 +117,19 @@ class UpdatePriceMonitor(threading.Thread):
                 tmp_ticker = Ticker(item[1].symbol ,True)
                 
                 item[5].set(str(tmp_ticker.last_price))
-                item[6].set(str(tmp_ticker.daily_return))
+                item[6].set(str(tmp_ticker.daily_return) + "%")
                 
+                if tmp_ticker.daily_return < 0:
+                    item[4].config(fg='red')
+                else:
+                    item[4].config(fg='green')
             
     def stop(self):
         self.Terminated = True
 
 
 def kill_thread_refresh_price_monitor(tl_monitor, thread):
+    """tue la mise a jour des prix du monitor lorsque l on ferme la toplevel"""
     thread.stop()
     tl_monitor.destroy()
 
@@ -141,6 +149,7 @@ def btn_monitor_delete_selected_idea():
                 
                 
 def btn_show_monitor():
+    """affiche la toplevel monitor en passant par un thread"""
     mon = Monitor()
     if len(mon.ideas) > 0:
         tl_monitor = Toplevel()
@@ -150,6 +159,7 @@ def btn_show_monitor():
 
 
 def manage_monitor_event_click_price(event):
+    """delencher l ouverture de la toplevel permettant de cree une alerte sur le prix apres avoir cliquer sur le prix depuis monitor"""
     global vec_data_ideas
     for item in vec_data_ideas:
         if item[3] == event.widget:
@@ -157,7 +167,7 @@ def manage_monitor_event_click_price(event):
         
         
 def manage_monitor(mon, tl_monitor):
-    
+    """fonction qui affiche toutes les idees a monitorer dans la toplevel monitor"""
     frame_monitor = Frame(tl_monitor)
     frame_monitor.grid(row=0, column=0)
     
@@ -189,8 +199,14 @@ def manage_monitor(mon, tl_monitor):
             tmp_label_last_price.bind('<Button-1>', manage_monitor_event_click_price)
             
             str_label_intraday_return_value = StringVar()
-            str_label_intraday_return_value.set(str(tmp_ticker.daily_return))
+            str_label_intraday_return_value.set(str(tmp_ticker.daily_return) + "%")
             tmp_label_intraday_return = Label(frame_monitor, textvariable=str_label_intraday_return_value)
+            
+            if tmp_ticker.daily_return < 0:
+                tmp_label_intraday_return.config(fg='red')
+            else:
+                tmp_label_intraday_return.config(fg='green')
+            
             tmp_label_intraday_return.grid(row=grid_row, column=2)
             
             vec_data_ideas.append([tmp_idea_cb_value, idea, tmp_idea_cb, tmp_label_last_price, tmp_label_intraday_return, str_label_last_price_value, str_label_intraday_return_value])
@@ -205,7 +221,7 @@ def manage_monitor(mon, tl_monitor):
 
 
 def btn_setup_new_idea_to_monitor():
-    
+    """creation d une nouvelle idee a monitorer"""
     if str_entry_ticker.get() != '' and str_entry_ticker.get() != default_entry_ticker:
         tmp_symbol = str_entry_ticker.get()
     else:
@@ -311,7 +327,7 @@ def msgbox(msg):
 
 
 def manage_alerts():
-    """fonction qui affiche les alerts actives"""
+    """fonction qui affiche dans une toplevel les alerts actives"""
     
     global warnings
     warnings = check_all_alert()
@@ -323,7 +339,7 @@ def manage_alerts():
     if len(warnings) > 0:
         
         global vec_data_alerts
-        #vec_data_alerts = []
+        #vec_data_alerts = [] # deprecie car la frame n est pas videe pour etre reconstruite
         
         #ajouter uniquement les manquants
         count_new_alert = 0
@@ -337,8 +353,8 @@ def manage_alerts():
 
             if need_to_insert_alert:
                 count_new_alert += 1
-                tmp_alert_cb_value = IntVar() # variable de type int (objet)
-                tmp_alert_cb_value.set(0) # valeur initiale vaut 1
+                tmp_alert_cb_value = IntVar()
+                tmp_alert_cb_value.set(0)
                 tmp_alert_cb = Checkbutton(frame_alert, text=str(warnings[i]), variable=tmp_alert_cb_value, fg='red')
                 tmp_alert_cb.grid(row=start_row_alerts+len(frame_alert.winfo_children())-1, column=0, sticky='W')
                 
@@ -358,6 +374,7 @@ def manage_alerts():
 
 
 def btn_delete_selected_all_alerts():
+    """fonction qui supprime dans la DB et la gui les alertes selectionnees depuis la toplevel"""
     global vec_data_all_alerts
     global frame_alert
     
@@ -375,6 +392,7 @@ def btn_delete_selected_all_alerts():
 
 
 def btn_show_all_alerts():
+    """fonction associee a un boutin qui affiche dans une toplevel toutes les alertes crees par l utilisateur"""
     global vec_data_all_alerts
     
     vec_all_alerts = get_all_alerts()
@@ -499,7 +517,6 @@ frame_alert.grid(row=8, column=0)
 warnings = []
 vec_data_alerts = []
 vec_data_all_alerts = []
-manage_alerts()
 
 vec_data_ideas = []
 
@@ -520,12 +537,13 @@ btn_new_alert = Button(root, text="Setup new alert", command=btn_setup_new_alert
 btn_new_alert.grid(row=4, column=4)
 
 
-
-
 str_label_alert_symbol = StringVar()
 alert_action = StringVar()
 str_entry_alert_limit = StringVar()
 
-thread.start_new_thread(update_clock, ())
 
-root.mainloop()
+if __name__ == '__main__':
+    manage_alerts()
+    thread.start_new_thread(update_clock, ())
+    root.mainloop()
+
